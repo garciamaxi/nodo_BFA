@@ -66,16 +66,45 @@ docker stats bfanodo
 docker exec bfanodo localstate.pl
 ```
 
-Para chequear la sincronización vía JSON-RPC (con el RPC expuesto en
-127.0.0.1:8545):
+### Verificar estado vía JSON-RPC
+
+Por consola, adentro del contenedor, vía el socket IPC (no depende de que el
+RPC esté publicado en el host):
+
+```bash
+docker exec bfanodo geth attach --exec "eth.syncing" /home/bfa/bfa/network/node/geth.ipc
+docker exec bfanodo geth attach --exec "net.peerCount" /home/bfa/bfa/network/node/geth.ipc
+docker exec bfanodo geth attach --exec "admin.peers" /home/bfa/bfa/network/node/geth.ipc
+docker exec bfanodo geth attach --exec "eth.blockNumber" /home/bfa/bfa/network/node/geth.ipc
+docker exec bfanodo geth attach --exec "net.version" /home/bfa/bfa/network/node/geth.ipc
+docker exec bfanodo geth attach --exec "eth.chainId()" /home/bfa/bfa/network/node/geth.ipc
+```
+
+O entrar a la consola interactiva:
+
+```bash
+docker exec -it bfanodo geth attach /home/bfa/bfa/network/node/geth.ipc
+```
+
+Desde afuera del contenedor, con el RPC HTTP publicado en el host
+(`BFANODO_RPC_BIND:BFANODO_HTTP_PORT` en `.env`, por defecto
+`127.0.0.1:8545`):
 
 ```bash
 curl -s -X POST -H "Content-Type: application/json" \
   --data '{"jsonrpc":"2.0","method":"eth_syncing","params":[],"id":1}' \
   http://127.0.0.1:8545
+
+curl -s -X POST -H "Content-Type: application/json" \
+  --data '{"jsonrpc":"2.0","method":"net_peerCount","params":[],"id":1}' \
+  http://127.0.0.1:8545
 ```
 
-`false` como resultado significa que el nodo ya está sincronizado.
+En `eth_syncing`: `false` significa que el nodo ya está sincronizado; un
+objeto con `currentBlock`/`highestBlock` significa que todavía está
+sincronizando y esa es la distancia que falta. `net.version` /
+`net_peerCount` te confirman el network id (`47525974938` en producción) y
+cuántos peers tenés conectados — ver más abajo cómo interpretarlos.
 
 ## Cuentas
 
