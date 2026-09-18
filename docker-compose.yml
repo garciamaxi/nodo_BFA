@@ -11,6 +11,13 @@ services:
     container_name: ${BFANODO_CONTAINER_NAME}
     restart: ${BFANODO_RESTART_POLICY}
     mem_limit: ${BFANODO_MEM_LIMIT}
+    # geth (v1.9.22, --exitwhensynced) no borra su geth.ipc al salir. Al
+    # reiniciar, bindear sobre ese socket viejo debería dar "address already
+    # in use" (geth lo maneja solo) pero en este bind mount externo vía
+    # VirtioFS da "operation not supported", que geth trata como fatal. Se
+    # borra el socket viejo antes de cada arranque para evitar el choque.
+    entrypoint: ["/bin/sh", "-c"]
+    command: ["rm -f /home/bfa/bfa/network/node/geth.ipc; exec /home/bfa/bfa/bin/singlestart.sh"]
     ports:
       # JSON-RPC HTTP y WebSocket: por defecto solo accesibles desde el propio
       # host (ver BFANODO_RPC_BIND en .env).

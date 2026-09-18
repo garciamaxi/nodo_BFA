@@ -100,11 +100,19 @@ curl -s -X POST -H "Content-Type: application/json" \
   http://127.0.0.1:8545
 ```
 
-En `eth_syncing`: `false` significa que el nodo ya está sincronizado; un
-objeto con `currentBlock`/`highestBlock` significa que todavía está
-sincronizando y esa es la distancia que falta. `net.version` /
-`net_peerCount` te confirman el network id (`47525974938` en producción) y
-cuántos peers tenés conectados — ver más abajo cómo interpretarlos.
+En `eth_syncing`: un objeto con `currentBlock`/`highestBlock` significa que
+está sincronizando y esa es la distancia que falta. `false` normalmente
+significa que ya está sincronizado, **pero también aparece de forma engañosa
+durante la fase de descarga del state trie del fast-sync** (después de bajar
+headers/bodies, mientras baja el estado del bloque pivot): en esa fase el
+downloader puede reportarse como inactivo aunque falte muchísimo. Para saber
+si de verdad terminó, comparar con `eth_blockNumber`: si se queda clavado en
+un valor bajo (o en `0x0`) mientras los logs siguen mostrando `Imported new
+state entries` con `pending` alto, todavía no terminó — cuando el state
+download termine vas a ver `blockNumber` saltar de golpe al bloque pivot.
+`net.version` / `net_peerCount` te confirman el network id (`47525974938` en
+producción) y cuántos peers tenés conectados — ver más abajo cómo
+interpretarlos.
 
 ## Cuentas
 
