@@ -1,0 +1,38 @@
+services:
+  bfanodo:
+    image: bfaar/nodo:latest
+    # La imagen oficial solo se publica para linux/amd64; en Mac Apple
+    # Silicon corre emulada (Rosetta). En un servidor Linux amd64 no hace
+    # falta esta línea, pero no molesta dejarla.
+    #
+    # Por qué esta imagen y no un geth/client-go moderno: ver "Nota técnica"
+    # en el README. Resumen: la red BFA en producción todavía corre nodos
+    # geth v1.9.22 (2020) y, verificado en vivo, esos nodos no completan el
+    # handshake RLPx con clientes ethereum/client-go v1.10.26 ni v1.13.15 —
+    # solo con clientes de esa misma generación vieja, que es justamente lo
+    # que trae esta imagen (compilada desde el fork "nucleo" de BFA).
+    platform: linux/amd64
+    container_name: bfanodo
+    restart: unless-stopped
+    mem_limit: 6g
+    ports:
+      # JSON-RPC HTTP y WebSocket: por defecto solo accesibles desde el propio
+      # host (127.0.0.1). Sacá el "127.0.0.1:" de las dos lineas de abajo si
+      # necesitas exponer el RPC a otras máquinas de tu red o a internet.
+      - "127.0.0.1:8545:8545"
+      - "127.0.0.1:8546:8546"
+      # P2P: debe quedar abierto al mundo para que el nodo pueda descubrir
+      # peers y sincronizar.
+      - "30303:30303/tcp"
+      - "30303:30303/udp"
+    volumes:
+      - bfanodo_data:/home/bfa
+    healthcheck:
+      test: ["CMD", "nc", "-z", "-w", "2", "127.0.0.1", "8545"]
+      interval: 30s
+      timeout: 5s
+      start_period: 30s
+      retries: 3
+
+volumes:
+  bfanodo_data:
