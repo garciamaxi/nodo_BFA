@@ -12,6 +12,26 @@ Referencia oficial: https://gitlab.bfa.ar/docker/bfanodo
 - Al menos 6 GB de RAM libres para el contenedor (`mem_limit: 6g`).
 - Espacio en disco suficiente para la blockchain (crece con el tiempo).
 
+## Configuración (`.env`)
+
+Toda la configuración del `docker-compose.yml` (imagen/tag, memoria, puertos,
+a qué interfaz se publica el RPC, nombre del contenedor, parámetros del
+healthcheck) vive en `.env`, en la misma carpeta. Docker Compose lo carga
+automáticamente — para cambiar algo, editá `.env` y volvé a correr
+`docker compose up -d`.
+
+Variable | Para qué sirve
+--- | ---
+`BFANODO_IMAGE` / `BFANODO_TAG` | Imagen y tag (`latest` = producción, `test` = testnet)
+`BFANODO_PLATFORM` | Plataforma forzada (`linux/amd64`, requerido por la imagen)
+`BFANODO_CONTAINER_NAME` | Nombre del contenedor
+`BFANODO_RESTART_POLICY` | Política de reinicio
+`BFANODO_MEM_LIMIT` | Límite de memoria del contenedor
+`BFANODO_RPC_BIND` | Interfaz donde se publican HTTP/WS (`127.0.0.1` = solo local)
+`BFANODO_HTTP_PORT` / `BFANODO_WS_PORT` | Puertos host para JSON-RPC HTTP y WebSocket
+`BFANODO_P2P_PORT` | Puerto P2P (TCP+UDP), abierto al mundo
+`BFANODO_HEALTHCHECK_*` | Intervalo, timeout, start_period y reintentos del healthcheck
+
 ## Levantar el nodo
 
 ```bash
@@ -57,11 +77,10 @@ Hacé backup del archivo de la keystore generado antes de usarlo.
 
 ## Exponer el RPC a otras máquinas
 
-Por defecto el `docker-compose.yml` publica los puertos 8545 (HTTP) y 8546
-(WebSocket) solo en `127.0.0.1` del host, por seguridad. Si necesitás que
-otras máquinas de tu red o internet accedan al RPC, editá el
-`docker-compose.yml` y sacá el prefijo `127.0.0.1:` de esas dos líneas, y
-luego:
+Por defecto `.env` publica los puertos 8545 (HTTP) y 8546 (WebSocket) solo en
+`127.0.0.1` del host, por seguridad. Si necesitás que otras máquinas de tu
+red o internet accedan al RPC, cambiá `BFANODO_RPC_BIND` en `.env` a `0.0.0.0`
+(o a una IP específica) y luego:
 
 ```bash
 docker compose up -d
@@ -70,8 +89,8 @@ docker compose up -d
 ## Red de test
 
 Esta configuración apunta a producción. Para levantar en cambio un nodo
-contra la red de pruebas (`test2network`, network id 55555000000), cambiá la
-imagen a `bfaar/nodo:test` en `docker-compose.yml`.
+contra la red de pruebas (`test2network`, network id 55555000000), cambiá
+`BFANODO_TAG=test` en `.env`.
 
 ## Detener / eliminar
 
