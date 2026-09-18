@@ -31,6 +31,22 @@ Variable | Para qué sirve
 `BFANODO_HTTP_PORT` / `BFANODO_WS_PORT` | Puertos host para JSON-RPC HTTP y WebSocket
 `BFANODO_P2P_PORT` | Puerto P2P (TCP+UDP), abierto al mundo
 `BFANODO_HEALTHCHECK_*` | Intervalo, timeout, start_period y reintentos del healthcheck
+`BFANODO_DATA_DIR` | Carpeta en disco donde persiste la blockchain (bind mount)
+
+## Dónde persiste la blockchain
+
+Los datos NO están en un volumen Docker (que en Mac vive dentro del disco
+virtual de Docker Desktop): `BFANODO_DATA_DIR` en `.env` apunta a una carpeta
+real en disco (acá, un disco externo) que se monta directo en el contenedor.
+Esa carpeta tiene que existir de antemano:
+
+```bash
+mkdir -p "$BFANODO_DATA_DIR"   # (el valor configurado en .env)
+```
+
+Si cambiás `BFANODO_DATA_DIR` a otra ubicación después de haber sincronizado
+datos, movelos vos mismo a mano antes de levantar el nodo de nuevo, o vas a
+volver a sincronizar desde cero.
 
 ## Levantar el nodo
 
@@ -38,9 +54,8 @@ Variable | Para qué sirve
 docker compose up -d
 ```
 
-Esto descarga la imagen `bfaar/nodo:latest`, crea un volumen persistente
-(`bfanodo_data`) y arranca el nodo con reinicio automático
-(`restart: unless-stopped`).
+Esto descarga la imagen `bfaar/nodo:latest` y arranca el nodo con reinicio
+automático (`restart: unless-stopped`), persistiendo en `BFANODO_DATA_DIR`.
 
 ## Verificar estado
 
@@ -95,9 +110,12 @@ contra la red de pruebas (`test2network`, network id 55555000000), cambiá
 ## Detener / eliminar
 
 ```bash
-docker compose down        # detiene y elimina el contenedor, conserva el volumen
-docker compose down -v     # además borra el volumen (pierde la blockchain sincronizada)
+docker compose down
 ```
+
+Los datos quedan intactos en `BFANODO_DATA_DIR` (es una carpeta normal en
+disco, no un volumen Docker) — para borrar la blockchain sincronizada hay que
+borrar esa carpeta a mano.
 
 ## Nota técnica: por qué no usamos un `ethereum/client-go` moderno
 

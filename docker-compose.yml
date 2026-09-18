@@ -21,13 +21,13 @@ services:
       - "${BFANODO_P2P_PORT}:30303/tcp"
       - "${BFANODO_P2P_PORT}:30303/udp"
     volumes:
-      - bfanodo_data:/home/bfa
+      # Bind mount a disco (externo por default, ver BFANODO_DATA_DIR en
+      # .env) en vez de un volumen Docker: así la blockchain persiste fuera
+      # del disco interno y es fácil de ubicar/respaldar desde el host.
+      - ${BFANODO_DATA_DIR}:/home/bfa
     healthcheck:
       test: ["CMD", "nc", "-z", "-w", "2", "127.0.0.1", "8545"]
       interval: ${BFANODO_HEALTHCHECK_INTERVAL}
       timeout: ${BFANODO_HEALTHCHECK_TIMEOUT}
       start_period: ${BFANODO_HEALTHCHECK_START_PERIOD}
       retries: ${BFANODO_HEALTHCHECK_RETRIES}
-
-volumes:
-  bfanodo_data:
